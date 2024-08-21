@@ -8,6 +8,12 @@ def generate_schema(df):
     schema = ""
     for col in df.columns:
         dtype = str(df[col].dtype)
+        if dtype == 'object':
+            dtype = 'TEXT'
+        elif dtype == 'int64':
+            dtype = 'INTEGER'
+        elif dtype == 'float64':
+            dtype = 'REAL'
         schema += f"{col} ({dtype}), "
     return schema.rstrip(', ')
 
@@ -37,6 +43,7 @@ def generate_sql_query(natural_language_query, schema):
         ],
         max_tokens=150,
         temperature=0,
+        api_key=openai.api_key
     )
     sql_query = response.choices[0].message["content"].strip()
     return sql_query
@@ -151,7 +158,7 @@ def main():
                 with st.spinner('Generating SQL query...'):
                     schema = generate_schema(df)
                     sql_query = generate_sql_query(user_query, schema)
-                    st.write(f"*Generated SQL Query:*\nsql\n{sql_query}\n")
+                    st.write(f"*Generated SQL Query:*\n```\n{sql_query}\n```")
 
                 with st.spinner('Executing SQL query...'):
                     result = execute_sql_query(df, sql_query)
@@ -166,5 +173,5 @@ def main():
         else:
             st.warning("Please enter your OpenAI API key to proceed.")
 
-if _name_ == "_main_":
+if __name__ == "__main__":
     main()
